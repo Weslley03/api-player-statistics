@@ -1,0 +1,38 @@
+# compiled output
+/dist
+/node_modules
+/build
+
+# claude
+CLAUDE.md
+.claude
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# test
+/coverage
+/test
+
+# sql schema
+main_schema.sql
