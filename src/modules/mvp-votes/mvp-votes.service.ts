@@ -75,6 +75,8 @@ export class MvpVotesService {
     const maxCount = Math.max(...votes.map((v) => v.count))
     const winners = votes.filter((v) => v.count === maxCount)
 
-    await Promise.all(winners.map((winner) => this.individualAwardRepository.incrementAward(winner.playerId, groupId, seasonId, MVP_KEY)))
+    if (winners.length !== 1) return
+
+    await this.individualAwardRepository.incrementAward(winners[0].playerId, groupId, seasonId, MVP_KEY)
   }
 }

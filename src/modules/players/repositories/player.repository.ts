@@ -74,11 +74,21 @@ export class PlayerRepository extends Repository<Player> {
        ),
        match_max AS (
          SELECT match_id, MAX(cnt) AS max_cnt FROM vote_counts GROUP BY match_id
+       ),
+       top_per_match AS (
+         SELECT vc.match_id, vc.voted_player_id
+         FROM vote_counts vc
+         JOIN match_max mm ON mm.match_id = vc.match_id AND mm.max_cnt = vc.cnt
+       ),
+       sole_winners AS (
+         SELECT match_id, MAX(voted_player_id::text) AS voted_player_id
+         FROM top_per_match
+         GROUP BY match_id
+         HAVING COUNT(*) = 1
        )
-       SELECT vc.match_id AS "matchId"
-       FROM vote_counts vc
-       JOIN match_max mm ON mm.match_id = vc.match_id AND mm.max_cnt = vc.cnt
-       WHERE vc.voted_player_id = $2`,
+       SELECT match_id AS "matchId"
+       FROM sole_winners
+       WHERE voted_player_id = $2`,
       [matchIds, playerId],
     )
 

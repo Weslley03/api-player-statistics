@@ -8,9 +8,9 @@ import { Match } from '../entities/match.entity'
 import { CreateMatchDto, MatchEventInputDto, TeamInputDto } from '../dto/create-match.dto'
 
 const MVP_SUBQUERIES = [
-  `(SELECT mv2.voted_player_id::text FROM mvp_votes mv2 WHERE mv2.match_id = m.id AND mv2.is_finalized = true GROUP BY mv2.voted_player_id ORDER BY COUNT(*) DESC LIMIT 1) AS "mvpPlayerId"`,
-  `(SELECT p2.name FROM mvp_votes mv2 INNER JOIN players p2 ON p2.id = mv2.voted_player_id WHERE mv2.match_id = m.id AND mv2.is_finalized = true GROUP BY mv2.voted_player_id, p2.name ORDER BY COUNT(*) DESC LIMIT 1) AS "mvpPlayerName"`,
-  `(SELECT p2.avatar_url FROM mvp_votes mv2 INNER JOIN players p2 ON p2.id = mv2.voted_player_id WHERE mv2.match_id = m.id AND mv2.is_finalized = true GROUP BY mv2.voted_player_id, p2.avatar_url ORDER BY COUNT(*) DESC LIMIT 1) AS "mvpAvatarUrl"`,
+  `(SELECT CASE WHEN COUNT(*) = 1 THEN MAX(t.voted_player_id) ELSE NULL END FROM (SELECT voted_player_id::text AS voted_player_id, RANK() OVER (ORDER BY COUNT(*) DESC) AS rnk FROM mvp_votes WHERE match_id = m.id AND is_finalized = true GROUP BY voted_player_id) t WHERE t.rnk = 1) AS "mvpPlayerId"`,
+  `(SELECT CASE WHEN COUNT(*) = 1 THEN MAX(p2.name) ELSE NULL END FROM (SELECT mv2.voted_player_id, RANK() OVER (ORDER BY COUNT(*) DESC) AS rnk FROM mvp_votes mv2 WHERE mv2.match_id = m.id AND mv2.is_finalized = true GROUP BY mv2.voted_player_id) t INNER JOIN players p2 ON p2.id = t.voted_player_id WHERE t.rnk = 1) AS "mvpPlayerName"`,
+  `(SELECT CASE WHEN COUNT(*) = 1 THEN MAX(p2.avatar_url) ELSE NULL END FROM (SELECT mv2.voted_player_id, RANK() OVER (ORDER BY COUNT(*) DESC) AS rnk FROM mvp_votes mv2 WHERE mv2.match_id = m.id AND mv2.is_finalized = true GROUP BY mv2.voted_player_id) t INNER JOIN players p2 ON p2.id = t.voted_player_id WHERE t.rnk = 1) AS "mvpAvatarUrl"`,
 ] as const
 
 export class ActiveSeasonNotFoundError extends Error {
