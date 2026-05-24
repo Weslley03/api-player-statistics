@@ -13,4 +13,7 @@ export interface MatchRawRow {
   team: string
   goals: number
   assists: number
+  mvpPlayerId: string | null
+  mvpPlayerName: string | null
+  mvpAvatarUrl: string | null
 }

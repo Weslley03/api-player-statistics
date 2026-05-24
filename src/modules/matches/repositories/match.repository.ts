@@ -7,6 +7,12 @@ import { MatchRawRow } from '../interfaces/match-raw-row.interface'
 import { Match } from '../entities/match.entity'
 import { CreateMatchDto, MatchEventInputDto, TeamInputDto } from '../dto/create-match.dto'
 
+const MVP_SUBQUERIES = [
+  `(SELECT mv2.voted_player_id::text FROM mvp_votes mv2 WHERE mv2.match_id = m.id AND mv2.is_finalized = true GROUP BY mv2.voted_player_id ORDER BY COUNT(*) DESC LIMIT 1) AS "mvpPlayerId"`,
+  `(SELECT p2.name FROM mvp_votes mv2 INNER JOIN players p2 ON p2.id = mv2.voted_player_id WHERE mv2.match_id = m.id AND mv2.is_finalized = true GROUP BY mv2.voted_player_id, p2.name ORDER BY COUNT(*) DESC LIMIT 1) AS "mvpPlayerName"`,
+  `(SELECT p2.avatar_url FROM mvp_votes mv2 INNER JOIN players p2 ON p2.id = mv2.voted_player_id WHERE mv2.match_id = m.id AND mv2.is_finalized = true GROUP BY mv2.voted_player_id, p2.avatar_url ORDER BY COUNT(*) DESC LIMIT 1) AS "mvpAvatarUrl"`,
+] as const
+
 export class ActiveSeasonNotFoundError extends Error {
   constructor(groupId: string) {
     super(`No active season found for group ${groupId}`)
@@ -115,6 +121,7 @@ export class MatchRepository extends Repository<Match> {
         'mp.team AS "team"',
         'mp.goals AS "goals"',
         'mp.assists AS "assists"',
+        ...MVP_SUBQUERIES,
       ])
       .orderBy('m.date', 'DESC')
       .getRawMany<MatchRawRow>()
@@ -143,6 +150,7 @@ export class MatchRepository extends Repository<Match> {
         'mp.team AS "team"',
         'mp.goals AS "goals"',
         'mp.assists AS "assists"',
+        ...MVP_SUBQUERIES,
       ])
       .getRawMany<MatchRawRow>()
 

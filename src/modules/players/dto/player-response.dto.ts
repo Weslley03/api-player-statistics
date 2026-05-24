@@ -37,8 +37,9 @@ export class MatchParticipationDto {
   team: string
   goals: number
   assists: number
+  isMvp: boolean
 
-  static from(row: MatchParticipationRawRow): MatchParticipationDto {
+  static from(row: MatchParticipationRawRow, isMvp: boolean): MatchParticipationDto {
     const dto = new MatchParticipationDto()
     dto.matchId = row.matchId
     dto.date = row.date
@@ -49,6 +50,7 @@ export class MatchParticipationDto {
     dto.team = row.team
     dto.goals = row.goals
     dto.assists = row.assists
+    dto.isMvp = isMvp
     return dto
   }
 }
