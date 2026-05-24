@@ -31,12 +31,19 @@ export class TeamMatchDto {
   assists: MatchEventDto[]
 }
 
+export class MvpWinnerDto {
+  playerId: string
+  playerName: string
+  avatarUrl: string | null
+}
+
 export class MatchResponseDto {
   id: number
   date: string
   groupId: string
   home: TeamMatchDto
   away: TeamMatchDto
+  mvp: MvpWinnerDto | null
 
   static fromRows(rows: MatchRawRow[], s3: S3UrlService): MatchResponseDto {
     const first = rows[0]
@@ -48,6 +55,8 @@ export class MatchResponseDto {
 
     dto.home = buildTeam(first.homeName, first.homeScore, rows, 'home', s3)
     dto.away = buildTeam(first.awayName, first.awayScore, rows, 'away', s3)
+
+    dto.mvp = first.mvpPlayerId ? { playerId: first.mvpPlayerId, playerName: first.mvpPlayerName!, avatarUrl: s3.buildAvatarUrl(first.mvpPlayerId, first.mvpAvatarUrl) } : null
 
     return dto
   }

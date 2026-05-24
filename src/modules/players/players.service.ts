@@ -141,10 +141,13 @@ export class PlayersService {
       this.playerRepository.findAwardsByPlayerAndGroup(row.id, row.groupId),
     ])
 
+    const matchIds = matchRows.map((m) => m.matchId)
+    const mvpMatchIds = await this.playerRepository.findMvpMatchIds(row.id, matchIds)
+
     return PlayerResponseDto.from(
       row,
       awardRows.map((a) => IndividualAwardDto.from(a)),
-      matchRows.map((m) => MatchParticipationDto.from(m)),
+      matchRows.map((m) => MatchParticipationDto.from(m, mvpMatchIds.has(m.matchId))),
       this.s3UrlService,
     )
   }

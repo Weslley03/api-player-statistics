@@ -12,6 +12,7 @@ import { PlayerHasGroupModule } from './modules/player-has-group/player-has-grou
 import { PlayersModule } from './modules/players/players.module'
 import { SeasonsModule } from './modules/seasons/seasons.module'
 import { SharedModule } from './shared/shared.module'
+import { MvpVotesModule } from './modules/mvp-votes/mvp-votes.module'
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module'
 
 @Module({
@@ -33,6 +34,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
     PlayersModule,
     SeasonsModule,
     SubscriptionsModule,
+    MvpVotesModule,
   ],
 })
 export class AppModule {}
