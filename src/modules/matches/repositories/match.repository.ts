@@ -48,7 +48,7 @@ export class MatchRepository extends Repository<Match> {
       const match = manager.create(Match, {
         groupId: dto.groupId,
         seasonId: season.id,
-        date: new Date(dto.date),
+        date: new Date(`${dto.date}T12:00:00`),
         homeName: dto.home.name,
         homeScore: dto.home.score,
         awayName: dto.away.name,

@@ -1,13 +1,15 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { DataSource } from 'typeorm'
 import { IndividualAwardRepository } from '../individual-awards/repositories/individual-award.repository'
+import { MatchPlayer } from '../match-players/entities/match-player.entity'
 import { Match } from '../matches/entities/match.entity'
 import { CastMvpVoteDto } from './dto/cast-mvp-vote.dto'
 import { MvpVoteCount } from './interfaces/mvp-vote-count.interface'
 import { MvpVoteRepository } from './repositories/mvp-vote.repository'
 
 const MVP_KEY = 'mvp'
-const VOTING_WINDOW_MS = 24 * 60 * 60 * 1000
+// 6h
+const VOTING_WINDOW_MS = 6 * 60 * 60 * 1000
 
 export interface MvpVotesResult {
   votes: MvpVoteCount[]
@@ -30,7 +32,7 @@ export class MvpVotesService {
     })
     if (!match) throw new NotFoundException(`Match ${dto.matchId} not found in your group`)
 
-    const deadline = new Date(match.date).getTime() + VOTING_WINDOW_MS
+    const deadline = match.createdAt.getTime() + VOTING_WINDOW_MS
     if (Date.now() > deadline) throw new BadRequestException('Voting period has ended for this match')
 
     const existingVote = await this.mvpVoteRepository.findByMatchAndVoter(dto.matchId, voterPlayerId)
@@ -50,15 +52,18 @@ export class MvpVotesService {
     const match = await this.dataSource.getRepository(Match).findOne({ where: { id: matchId } })
     if (!match) throw new NotFoundException(`Match with id ${matchId} not found`)
 
-    const deadline = new Date(match.date).getTime() + VOTING_WINDOW_MS
-    const canVote = Date.now() <= deadline
+    const deadline = match.createdAt.getTime() + VOTING_WINDOW_MS
+    const withinDeadline = Date.now() <= deadline
 
-    const [votes, myVoteRecord] = await Promise.all([
+    const [votes, myVoteRecord, isParticipant] = await Promise.all([
       this.mvpVoteRepository.findVoteCountsByMatch(matchId),
       voterPlayerId ? this.mvpVoteRepository.findByMatchAndVoter(matchId, voterPlayerId) : Promise.resolve(null),
+      voterPlayerId ? this.dataSource.getRepository(MatchPlayer).existsBy({ matchId, playerId: voterPlayerId }) : Promise.resolve(false),
     ])
 
-    if (!canVote && votes.length > 0) {
+    const canVote = withinDeadline && (voterPlayerId ? isParticipant : false)
+
+    if (!withinDeadline && votes.length > 0) {
       await this.tryFinalizeMatchMvp(matchId, votes, match.groupId, match.seasonId)
     }
 
