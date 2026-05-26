@@ -65,34 +65,31 @@ export class PlayerRepository extends Repository<Player> {
   async findMvpMatchIds(playerId: string, matchIds: number[]): Promise<Set<number>> {
     if (matchIds.length === 0) return new Set()
 
-    const rows = await this.query<{ matchId: number }[]>(
-      `WITH vote_counts AS (
-         SELECT match_id, voted_player_id, COUNT(*)::int AS cnt
+    const rows = await this.query<{ matchId: string | number }[]>(
+      `WITH counts AS (
+         SELECT match_id, voted_player_id, COUNT(*)::int AS n
          FROM mvp_votes
-         WHERE is_finalized = true AND match_id = ANY($1)
+         WHERE is_finalized = true AND match_id = ANY($1::bigint[])
          GROUP BY match_id, voted_player_id
        ),
-       match_max AS (
-         SELECT match_id, MAX(cnt) AS max_cnt FROM vote_counts GROUP BY match_id
+       ranked AS (
+         SELECT match_id, voted_player_id,
+                RANK() OVER (PARTITION BY match_id ORDER BY n DESC) AS rnk
+         FROM counts
        ),
-       top_per_match AS (
-         SELECT vc.match_id, vc.voted_player_id
-         FROM vote_counts vc
-         JOIN match_max mm ON mm.match_id = vc.match_id AND mm.max_cnt = vc.cnt
-       ),
-       sole_winners AS (
-         SELECT match_id, MAX(voted_player_id::text) AS voted_player_id
-         FROM top_per_match
-         GROUP BY match_id
-         HAVING COUNT(*) = 1
+       at_rank1 AS (
+         SELECT match_id, voted_player_id,
+                COUNT(*) OVER (PARTITION BY match_id) AS cnt_at_rank1
+         FROM ranked
+         WHERE rnk = 1
        )
        SELECT match_id AS "matchId"
-       FROM sole_winners
-       WHERE voted_player_id = $2`,
+       FROM at_rank1
+       WHERE voted_player_id = $2 AND cnt_at_rank1 = 1`,
       [matchIds, playerId],
     )
 
-    return new Set(rows.map((r) => r.matchId))
+    return new Set(rows.map((r) => Number(r.matchId)))
   }
 
   async findAwardsByPlayerAndGroup(playerId: string, groupId: string): Promise<IndividualAwardRawRow[]> {
