@@ -16,6 +16,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
         database: config.get<string>('DB_NAME'),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         synchronize: false,
+        // prevent zombie connections: keepAlive probes detect dead TCP links
+        // so the pool evicts them instead of hanging on the next query.
+        extra: {
+          max: 10,
+          idleTimeoutMillis: 30_000,
+          connectionTimeoutMillis: 5_000,
+          keepAlive: true,
+          keepAliveInitialDelayMillis: 10_000,
+        },
+        maxQueryExecutionTime: 10_000,
       }),
     }),
   ],
