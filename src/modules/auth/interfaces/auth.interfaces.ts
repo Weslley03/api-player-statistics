@@ -13,4 +13,12 @@ export interface LoginResult {
 
 export interface AuthTokens {
   accessToken: string
+  refreshToken: string
+}
+
+export interface RefreshTokenPayload {
+  sub: string
+  groupId: string
+  jti: string
+  type: 'refresh'
 }

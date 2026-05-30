@@ -23,6 +23,16 @@ export class PlayerHasGroup {
   @Column({ name: 'group_id', type: 'uuid' })
   groupId: string
 
+  @Column({ name: 'refresh_token_hash', type: 'varchar', length: 64, nullable: true })
+  refreshTokenHash: string | null
+
+  @Index({ unique: true })
+  @Column({ name: 'refresh_token_jti', type: 'varchar', length: 36, nullable: true })
+  refreshTokenJti: string | null
+
+  @Column({ name: 'refresh_token_expires_at', type: 'timestamptz', nullable: true })
+  refreshTokenExpiresAt: Date | null
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date
 
