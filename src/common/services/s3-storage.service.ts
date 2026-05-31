@@ -25,6 +25,7 @@ export class S3StorageService {
         Key: `user-avatar/${playerId}.png`,
         Body: buffer,
         ContentType: mimeType,
+        CacheControl: 'no-cache',
       }),
     )
   }
